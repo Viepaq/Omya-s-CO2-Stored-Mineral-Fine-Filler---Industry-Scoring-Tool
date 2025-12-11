@@ -11,7 +11,7 @@ import {
   ReferenceLine,
   Text
 } from 'recharts';
-import { ChevronRight, RefreshCcw, Info, BarChart3, CheckCircle2, Hexagon } from 'lucide-react';
+import { ChevronRight, RefreshCcw, Info, CheckCircle2, Hexagon } from 'lucide-react';
 
 /**
  * CONFIGURATION & DATA
@@ -22,31 +22,72 @@ const QUESTIONS = {
       id: 'f1', 
       text: 'Colour / ΔE tolerance',
       minLabel: 'Very strict white',
-      maxLabel: 'Natural grey acceptable'
+      maxLabel: 'Natural grey acceptable',
+      weight: 1
     },
     { 
       id: 'f2', 
       text: 'Purity effect',
       minLabel: 'High concern',
-      maxLabel: 'Low concern'
+      maxLabel: 'Low concern',
+      weight: 1
     },
     { 
       id: 'f3', 
       text: 'Number or complication of jobs',
       minLabel: 'Major changes',
-      maxLabel: 'Drop-in'
+      maxLabel: 'Drop-in',
+      weight: 1
     },
     { 
       id: 'f4', 
       text: 'Packaging',
       minLabel: 'High concern',
-      maxLabel: 'Low concern'
+      maxLabel: 'Low concern',
+      weight: 1
     },
     { 
       id: 'f5', 
       text: 'Volume',
       minLabel: 'No interest',
-      maxLabel: 'High'
+      maxLabel: 'High',
+      weight: 1
+    },
+    // Extended Factors (Half Weight)
+    { 
+      id: 'f6', 
+      text: 'Particle size fit',
+      minLabel: 'Outside range',
+      maxLabel: 'Within target',
+      weight: 0.5
+    },
+    { 
+      id: 'f7', 
+      text: 'Recyclability concerns',
+      minLabel: 'Severe',
+      maxLabel: 'None',
+      weight: 0.5
+    },
+    { 
+      id: 'f8', 
+      text: 'Locked-in to "original parts" / supplier',
+      minLabel: 'Tight lock-in',
+      maxLabel: 'Flexible',
+      weight: 0.5
+    },
+    { 
+      id: 'f9', 
+      text: 'Different filler supplier already fixed',
+      minLabel: 'Fixed',
+      maxLabel: 'Not fixed',
+      weight: 0.5
+    },
+    { 
+      id: 'f10', 
+      text: 'Filler spread across value chain',
+      minLabel: 'Tiny niche',
+      maxLabel: 'Used widely',
+      weight: 0.5
     },
   ],
   priceSensitivity: [
@@ -54,77 +95,53 @@ const QUESTIONS = {
       id: 'p1', 
       text: 'Willingness to pay',
       minLabel: 'None',
-      maxLabel: '>12% premium'
+      maxLabel: '>12% premium',
+      weight: 1
     },
     { 
       id: 'p2', 
       text: 'Performance parity',
       minLabel: 'Inferior',
-      maxLabel: 'Equal/better'
+      maxLabel: 'Equal/better',
+      weight: 1
     },
     { 
       id: 'p3', 
       text: 'Tax / other incentives',
       minLabel: 'None',
-      maxLabel: 'Strong'
+      maxLabel: 'Strong',
+      weight: 1
     },
     { 
       id: 'p4', 
       text: 'First-mover reluctance',
       minLabel: 'Will not pilot first',
-      maxLabel: 'Happy to pilot'
+      maxLabel: 'Happy to pilot',
+      weight: 1
     },
     { 
       id: 'p5', 
       text: 'Stated need',
       minLabel: 'No need',
-      maxLabel: 'Clear need'
+      maxLabel: 'Clear need',
+      weight: 1
     },
-  ],
-  otherFactors: [
+    // Extended Factors (Half Weight)
     { 
-      id: 'o1', 
-      text: 'Recyclability concerns',
-      minLabel: 'Severe',
-      maxLabel: 'None'
-    },
-    { 
-      id: 'o2', 
-      text: 'Particle size fit',
-      minLabel: 'Outside range',
-      maxLabel: 'Within target'
-    },
-    { 
-      id: 'o3', 
+      id: 'p6', 
       text: 'Risk of losing market share due to price',
       minLabel: 'High risk',
-      maxLabel: 'Low risk'
+      maxLabel: 'Low risk',
+      weight: 0.5
     },
     { 
-      id: 'o4', 
+      id: 'p7', 
       text: 'CO2 certificates cheaper than switching',
       minLabel: 'Yes',
-      maxLabel: 'No'
+      maxLabel: 'No',
+      weight: 0.5
     },
-    { 
-      id: 'o5', 
-      text: 'Locked-in to "original parts" / supplier',
-      minLabel: 'Tight lock-in',
-      maxLabel: 'Flexible multi-sourcing allowed'
-    },
-    { 
-      id: 'o6', 
-      text: 'Different filler supplier already fixed',
-      minLabel: 'Fixed and non-negotiable',
-      maxLabel: 'Not fixed'
-    },
-    { 
-      id: 'o7', 
-      text: 'Filler spread across value chain',
-      minLabel: 'Tiny niche',
-      maxLabel: 'Used widely'
-    },
-  ]
+  ],
 };
 
 // Updated Colors for Dark Theme
@@ -143,7 +160,10 @@ const RatingRow = ({ question, value, onChange }) => {
   return (
     <div className="mb-8 last:mb-0 animate-in fade-in slide-in-from-bottom-2 duration-500">
       <div className="flex justify-between items-baseline mb-3">
-        <h3 className="text-sm font-medium text-zinc-200">{question.text}</h3>
+        <h3 className="text-sm font-medium text-zinc-200">
+          {question.text}
+          {question.weight === 0.5 && <span className="ml-2 text-[10px] text-zinc-500 font-bold uppercase tracking-wider bg-zinc-800 px-1.5 py-0.5 rounded">0.5x</span>}
+        </h3>
       </div>
       
       <div className="flex justify-between text-[10px] text-zinc-500 mb-2 px-1 font-medium uppercase tracking-wider">
@@ -177,61 +197,6 @@ const RatingRow = ({ question, value, onChange }) => {
 };
 
 /**
- * COMPONENT: OtherFactorRow
- */
-const OtherFactorRow = ({ question, value, enabled, onToggle, onChange }) => {
-  return (
-    <div className="mb-8 last:mb-0 animate-in fade-in slide-in-from-bottom-2 duration-500">
-      <div className="flex items-start gap-3 mb-3">
-        <div className="relative flex items-center">
-          <input
-            type="checkbox"
-            checked={enabled}
-            onChange={(e) => onToggle(question.id, e.target.checked)}
-            className="peer h-5 w-5 cursor-pointer appearance-none rounded-md border border-zinc-700 bg-zinc-800 checked:border-orange-500 checked:bg-orange-500 transition-all"
-          />
-          <CheckCircle2 className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-3.5 h-3.5 text-black opacity-0 peer-checked:opacity-100 transition-opacity" />
-        </div>
-        <h3 className={`text-sm font-medium transition-colors ${enabled ? 'text-zinc-200' : 'text-zinc-500'}`}>
-          {question.text}
-        </h3>
-      </div>
-
-      {enabled && (
-        <div className="animate-in fade-in slide-in-from-top-1 duration-300 pl-8">
-          <div className="flex justify-between text-[10px] text-zinc-500 mb-2 px-1 font-medium uppercase tracking-wider">
-            <span>{question.minLabel}</span>
-            <span>{question.maxLabel}</span>
-          </div>
-
-          <div className="flex justify-between gap-2">
-            {RATING_OPTIONS.map((option) => {
-              const isSelected = value === option.value;
-              return (
-                <button
-                  key={option.label}
-                  onClick={() => onChange(question.id, option.value)}
-                  className={`
-                    h-10 w-10 rounded-xl flex items-center justify-center text-xs font-bold transition-all duration-300
-                    border
-                    ${isSelected ? option.activeColor : option.color}
-                    ${isSelected ? 'scale-110 shadow-lg' : 'hover:scale-105 active:scale-95 hover:border-zinc-500 hover:text-zinc-300'}
-                  `}
-                  aria-label={`Rate ${option.label}`}
-                  aria-pressed={isSelected}
-                >
-                  {option.label}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      )}
-    </div>
-  );
-};
-
-/**
  * COMPONENT: ChartTooltip
  */
 const CustomTooltip = ({ active, payload }) => {
@@ -242,10 +207,10 @@ const CustomTooltip = ({ active, payload }) => {
         <p className="font-bold text-orange-500 mb-1">{data.name}</p>
         <div className="space-y-1">
           <p className="text-zinc-400 flex justify-between gap-4">
-            <span>Friction:</span> <span className="text-zinc-200 font-mono">{data.x}</span>
+            <span>Friction:</span> <span className="text-zinc-200 font-mono">{data.x.toFixed(1)}</span>
           </p>
           <p className="text-zinc-400 flex justify-between gap-4">
-            <span>Price Sens:</span> <span className="text-zinc-200 font-mono">{data.y}</span>
+            <span>Price Sens:</span> <span className="text-zinc-200 font-mono">{data.y.toFixed(1)}</span>
           </p>
         </div>
       </div>
@@ -280,21 +245,9 @@ export default function App() {
   const [step, setStep] = useState('landing');
   const [industryName, setIndustryName] = useState('');
   const [scores, setScores] = useState({});
-  const [otherFactorsEnabled, setOtherFactorsEnabled] = useState({});
 
   const handleRatingChange = (id, value) => {
     setScores(prev => ({ ...prev, [id]: value }));
-  };
-
-  const handleOtherFactorToggle = (id, enabled) => {
-    setOtherFactorsEnabled(prev => ({ ...prev, [id]: enabled }));
-    if (!enabled) {
-      setScores(prev => {
-        const newScores = { ...prev };
-        delete newScores[id];
-        return newScores;
-      });
-    }
   };
 
   const handleStart = () => {
@@ -303,32 +256,31 @@ export default function App() {
 
   const handleReset = () => {
     setScores({});
-    setOtherFactorsEnabled({});
     setIndustryName('');
     setStep('landing');
   };
 
   const isAssessmentComplete = useMemo(() => {
-    const requiredQuestions = [...QUESTIONS.priceSensitivity, ...QUESTIONS.frictionToAdopt];
-    const requiredComplete = requiredQuestions.every(q => scores[q.id] !== undefined);
-    const enabledOtherFactors = QUESTIONS.otherFactors.filter(q => otherFactorsEnabled[q.id]);
-    const otherFactorsComplete = enabledOtherFactors.every(q => scores[q.id] !== undefined);
-    return requiredComplete && otherFactorsComplete;
-  }, [scores, otherFactorsEnabled]);
+    const allQuestions = [...QUESTIONS.priceSensitivity, ...QUESTIONS.frictionToAdopt];
+    return allQuestions.every(q => scores[q.id] !== undefined);
+  }, [scores]);
 
   const results = useMemo(() => {
     if (step !== 'result') return null;
-    const frictionScore = QUESTIONS.frictionToAdopt.reduce((acc, q) => acc + (scores[q.id] || 0), 0);
-    const priceScore = QUESTIONS.priceSensitivity.reduce((acc, q) => acc + (scores[q.id] || 0), 0);
-    const enabledOtherFactors = QUESTIONS.otherFactors.filter(q => otherFactorsEnabled[q.id]);
-    const otherScore = enabledOtherFactors.reduce((acc, q) => acc + (scores[q.id] || 0) * 0.5, 0);
-    const totalRawScore = frictionScore + priceScore + otherScore;
-    const maxRegularScore = (QUESTIONS.frictionToAdopt.length + QUESTIONS.priceSensitivity.length) * 2;
-    const maxOtherScore = enabledOtherFactors.length * 2 * 0.5;
-    const maxScore = maxRegularScore + maxOtherScore;
+    
+    // Calculate Weighted Scores
+    const frictionScore = QUESTIONS.frictionToAdopt.reduce((acc, q) => acc + ((scores[q.id] || 0) * (q.weight || 1)), 0);
+    const priceScore = QUESTIONS.priceSensitivity.reduce((acc, q) => acc + ((scores[q.id] || 0) * (q.weight || 1)), 0);
+    
+    const totalRawScore = frictionScore + priceScore;
+
+    // Calculate Max Possible Score (considering weights)
+    const maxFriction = QUESTIONS.frictionToAdopt.reduce((acc, q) => acc + (2 * (q.weight || 1)), 0);
+    const maxPrice = QUESTIONS.priceSensitivity.reduce((acc, q) => acc + (2 * (q.weight || 1)), 0);
+    const maxScore = maxFriction + maxPrice;
 
     return { x: frictionScore, y: priceScore, totalScore: totalRawScore, maxScore };
-  }, [scores, otherFactorsEnabled, step]);
+  }, [scores, step]);
 
   // --- RENDERERS ---
 
@@ -378,9 +330,7 @@ export default function App() {
   );
 
   const renderAssessment = () => {
-    const totalRequired = QUESTIONS.priceSensitivity.length + QUESTIONS.frictionToAdopt.length;
-    const enabledOtherCount = QUESTIONS.otherFactors.filter(q => otherFactorsEnabled[q.id]).length;
-    const totalQuestions = totalRequired + enabledOtherCount;
+    const totalQuestions = QUESTIONS.priceSensitivity.length + QUESTIONS.frictionToAdopt.length;
     const answeredCount = Object.keys(scores).length;
 
     return (
@@ -421,29 +371,6 @@ export default function App() {
             <div className="bg-zinc-900/50 border border-zinc-800/50 p-6 rounded-[2rem] shadow-xl backdrop-blur-sm">
               {QUESTIONS.priceSensitivity.map(q => (
                 <RatingRow key={q.id} question={q} value={scores[q.id]} onChange={handleRatingChange} />
-              ))}
-            </div>
-          </section>
-
-          {/* Section 3 */}
-          <section>
-            <div className="flex items-center gap-3 mb-6">
-              <div className="h-8 w-1 bg-zinc-700 rounded-full"></div>
-              <div className="flex items-baseline gap-2">
-                <h3 className="text-xl font-bold text-white">Other Factors</h3>
-                <span className="text-xs text-zinc-500 font-medium uppercase tracking-wider">(Half Weight)</span>
-              </div>
-            </div>
-            <div className="bg-zinc-900/50 border border-zinc-800/50 p-6 rounded-[2rem] shadow-xl backdrop-blur-sm">
-              {QUESTIONS.otherFactors.map(q => (
-                <OtherFactorRow 
-                  key={q.id} 
-                  question={q} 
-                  value={scores[q.id]}
-                  enabled={otherFactorsEnabled[q.id] || false}
-                  onToggle={handleOtherFactorToggle}
-                  onChange={handleRatingChange} 
-                />
               ))}
             </div>
           </section>
@@ -548,10 +475,7 @@ export default function App() {
                 </Scatter>
 
                  <Text 
-                    x={results.x} // Will be updated by chart but mapping logic needs to be right? No, standard Recharts Text doesn't auto-map.
-                    // Instead using standard label prop on Scatter or map over data manually if I had access to x/y coords. 
-                    // Simplifying: Recharts Scatter Label is tricky. Using custom label render or just tooltip. 
-                    // Let's try a custom label component in Scatter.
+                    x={results.x}
                  />
               </ScatterChart>
             </ResponsiveContainer>
@@ -584,13 +508,13 @@ export default function App() {
           <div className="bg-zinc-900 p-6 rounded-[2rem] border border-zinc-800 text-center">
             <p className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest mb-2">Friction</p>
             <p className={`text-3xl font-bold font-mono ${results.x > 0 ? 'text-red-400' : 'text-emerald-400'}`}>
-              {results.x > 0 ? '+' : ''}{results.x}
+              {results.x > 0 ? '+' : ''}{results.x.toFixed(1)}
             </p>
           </div>
           <div className="bg-zinc-900 p-6 rounded-[2rem] border border-zinc-800 text-center">
             <p className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest mb-2">Price Sens.</p>
             <p className={`text-3xl font-bold font-mono ${results.y > 0 ? 'text-red-400' : 'text-emerald-400'}`}>
-               {results.y > 0 ? '+' : ''}{results.y}
+               {results.y > 0 ? '+' : ''}{results.y.toFixed(1)}
             </p>
           </div>
         </div>
