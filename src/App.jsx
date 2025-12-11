@@ -465,10 +465,10 @@ export default function App() {
                 <ReferenceLine y={0} stroke="#3f3f46" strokeWidth={1} />
                 
                 {/* Quadrant Labels */}
-                <ReferenceLine x={5} y={5} stroke="none" label={<QuadrantLabel value="Opportunity" x={0.5} y={0.15} />} />
-                <ReferenceLine x={-5} y={5} stroke="none" label={<QuadrantLabel value="Challenging" x={0.5} y={0.15} />} />
-                <ReferenceLine x={-5} y={-5} stroke="none" label={<QuadrantLabel value="Challenging" x={0.5} y={0.85} />} />
-                <ReferenceLine x={5} y={-5} stroke="none" label={<QuadrantLabel value="Challenging" x={0.5} y={0.85} />} />
+                <ReferenceLine x={5} y={5} stroke="none" label={<QuadrantLabel value="Opportunity" x={0.75} y={0.15} />} />
+                <ReferenceLine x={-5} y={5} stroke="none" label={<QuadrantLabel value="Challenging" x={0.25} y={0.15} />} />
+                <ReferenceLine x={-5} y={-5} stroke="none" label={<QuadrantLabel value="Challenging" x={0.25} y={0.85} />} />
+                <ReferenceLine x={5} y={-5} stroke="none" label={<QuadrantLabel value="Challenging" x={0.75} y={0.85} />} />
 
                 <Scatter name={industryName} data={chartData} fill="#f97316">
                   <Cell fill="#f97316" />
